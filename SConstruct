@@ -6,6 +6,3 @@ wm_files = Glob('wm/src/*.cpp')
 
 env['CPPPATH'] += ['wm/src']
 wm = env.Program('manix-wm', [common_files, wm_files])
-
-env["CFLAGS"] += "-std=c99"
-env.Program("rendertest", 'rendertest.c')

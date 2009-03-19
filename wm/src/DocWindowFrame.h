@@ -10,7 +10,7 @@ namespace wm {
 
 	class Label;
 
-	class DocWindowFrame : public WindowFrame {
+	class DocWindowFrame : public WindowFrame, private EventHandler {
 	public:
 						DocWindowFrame(
 							App&						app,
@@ -33,13 +33,18 @@ namespace wm {
 		void			adjustFrameToClient();
 
 	private:
+		xcb_gcontext_t	mGc;
 		x::Window		mFrameWindow;
 		Label*			mWindowLabel;
 
 		uint32_t		calcWidthFromClient();
+		uint32_t		calcHeightFromClient();
 
 		void			onTitleChanged(
 							const std::wstring&		title);
+
+		void			onEvent(
+							xcb_expose_event_t*	event);
 	};
 
 } // wm

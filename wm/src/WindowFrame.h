@@ -12,10 +12,10 @@ namespace wm {
 
 	class WindowFrame {
 	public:
-								WindowFrame(
-									App&					app,
-									xcb_connection_t*		conn,
-									ClientWindow&			client);
+							WindowFrame(
+								App&					app,
+								xcb_connection_t*		conn,
+								ClientWindow&			client);
 
 		virtual void		show() = 0;
 
@@ -36,6 +36,10 @@ namespace wm {
 								std::wstring&				title) { title = mTitle; }
 
 		ClientWindow&		getClientWindow() { return mClientWindow; }
+
+	protected:
+
+		App&				getApp() { return mApp; }
 
 	private:
 		xcb_connection_t*	mConn;

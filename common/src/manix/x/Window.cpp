@@ -74,12 +74,21 @@ namespace x {
 	}
 
 	void
+	Window::setBackgroundColor(
+		uint32_t			background)
+	{
+		uint32_t			mask = XCB_CW_BACK_PIXEL;
+		uint32_t			values[] = { background };
+		xcb_change_window_attributes(mConn, mWindow, mask, values);
+	}
+
+	void
 	Window::setBackground(
 		xcb_pixmap_t		pixmap)
 	{
-		uint32_t				mask = XCB_CW_BACK_PIXMAP;
-		uint32_t				values[1] = { pixmap };
-		xcb_void_cookie_t	c = xcb_change_window_attributes(mConn, mWindow, mask, values);
+		uint32_t			mask = XCB_CW_BACK_PIXMAP;
+		uint32_t			values[1] = { pixmap };
+		xcb_change_window_attributes(mConn, mWindow, mask, values);
 	}
 
 	void

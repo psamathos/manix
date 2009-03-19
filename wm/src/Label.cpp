@@ -13,6 +13,7 @@ namespace wm {
 		xcb_render_picture_t		color,
 		x::Font*					font,
 		HAlign						align,
+		uint32_t					background,
 		int32_t						x,
 		int32_t						y,
 		uint32_t					width,
@@ -26,6 +27,8 @@ namespace wm {
 		, mHeight(height)
 		, mWidth(width)
 	{
+		mWindow.setBackgroundColor(background);
+
 		mWindowPict = xcb_generate_id(app);
 		uint32_t		mask = XCB_RENDER_CP_POLY_EDGE | XCB_RENDER_CP_POLY_MODE;
 		uint32_t		values[] = { XCB_RENDER_POLY_EDGE_SMOOTH, XCB_RENDER_POLY_MODE_IMPRECISE };
@@ -55,7 +58,7 @@ namespace wm {
 	{
 		xcb_rectangle_t		rect = { 0, 0, mWidth, mHeight };
 		xcb_render_color_t	color = { 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF };
-		xcb_render_fill_rectangles(mApp, XCB_RENDER_PICT_OP_OVER, mWindowPict, color, 1, &rect);
+		//xcb_render_fill_rectangles(mApp, XCB_RENDER_PICT_OP_OVER, mWindowPict, color, 1, &rect);
 
 		mApp.getSystemFont().render(mText, mApp.getBlackPen(), mWindowPict, 1, mFont->getAscender() + 1);
 	}

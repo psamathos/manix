@@ -33,6 +33,8 @@ namespace x {
 								int32_t				x,
 								int32_t				y);
 
+		void				setBackgroundColor(
+								uint32_t			color);
 		void				setBackground(
 								xcb_pixmap_t		pixmap);
 

@@ -26,10 +26,19 @@ namespace wm {
 		, mFrameWindow(conn, screen, parent, 100 + client.getX() - 20, 100 + client.getY() - 20,
 				client.getWidth() + kWindowWidthDelta, client.getHeight() + kWindowHeightDelta)
 	{
-		mWindowLabel = new Label(app, screen, mFrameWindow, app.getBlackPen(), &app.getSystemFont(), Label::kHAlignLeft, 5, 2, 100, 18, L"");
+		mWindowLabel = new Label(app, screen, mFrameWindow, app.getBlackPen(),
+				&app.getSystemFont(), Label::kHAlignLeft,
+				app.getColor(kColorGray), 5, 2, 100, 18, L"");
+
+		mGc = xcb_generate_id(app);
+		uint32_t			mask = XCB_GC_FOREGROUND;
+		uint32_t			values[] = { app.getColor(kColorGray) };
+		xcb_create_gc(app, mGc, mFrameWindow, mask, values);
+
+		app.addWindowHandler(mFrameWindow, this);
 
 		// Reparent last to make the client window topmost
-		client.reparent(&mFrameWindow, 20, 20);
+		client.reparent(&mFrameWindow, kWindowPosLeft, kWindowPosTop);
 		setTitle(L"Test title");
 	}
 
@@ -73,6 +82,12 @@ namespace wm {
 		return getClientWindow().getWidth() + kWindowWidthDelta;
 	}
 
+	uint32_t
+	DocWindowFrame::calcHeightFromClient()
+	{
+		return getClientWindow().getWidth() + kWindowHeightDelta;
+	}
+
 	/**
 	 *
 	 */
@@ -86,6 +101,22 @@ namespace wm {
 
 		mWindowLabel->resizeTo(textWidth + 5, 17);
 		mWindowLabel->moveTo((calcWidthFromClient() - textWidth) / 2, 2);
+	}
+
+	void
+	DocWindowFrame::onEvent(
+		xcb_expose_event_t*	event)
+	{
+		printf("window frame exposed\n");
+		uint32_t			mask = XCB_GC_FOREGROUND;
+		uint32_t			values[] = { getApp().getColor(kColorGray) };
+		xcb_change_gc(getApp(), mGc, mask, values);
+
+		xcb_rectangle_t		rect = { 0, 0, calcWidthFromClient(), calcHeightFromClient() };
+		xcb_poly_fill_rectangle(getApp(), mFrameWindow, mGc, 1, &rect);
+
+		//xcb_clear_area(getApp(), 0, mFrameWindow, 0, 0, calcWidthFromClient(), calcHeightFromClient());
+		xcb_flush(getApp());
 	}
 
 } // wm

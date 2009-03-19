@@ -31,6 +31,7 @@ namespace wm {
 									xcb_render_picture_t		color,
 									x::Font*					font,
 									HAlign						align,
+									uint32_t					background,
 									int32_t						x,
 									int32_t						y,
 									uint32_t					width,
