@@ -13,6 +13,7 @@ namespace x {
 								xcb_connection_t*	connection,
 								xcb_screen_t*		screen,
 								xcb_window_t		parent,
+								uint32_t			eventMask,
 								uint32_t			x,
 								uint32_t			y,
 								uint32_t			width,

@@ -69,27 +69,8 @@ namespace wm {
 		xcb_render_picture_t		mBlackPen;
 		uint32_t					mColors[kColorCount];
 
-		template <typename EventType>
-		void
-		dispatchEventByWindow(EventType* event)
-		{
-			if(mWindowMap.count(event->window) == 0){
-				printf("Got event for unknown window 0x%08X\n", event->window);
-			}else{
-				mWindowMap[event->window]->onEvent(event);
-			}
-		}
-
-		template <typename EventType>
-		void
-		dispatchEventByParent(EventType* event)
-		{
-			if(mWindowMap.count(event->parent) == 0){
-				printf("Got event for unknown window 0x%08X\n", event->parent);
-			}else{
-				mWindowMap[event->parent]->onEvent(event);
-			}
-		}
+		EventHandler*				findHandler(
+										xcb_window_t		window);
 	};
 
 } // wm

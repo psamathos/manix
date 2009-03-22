@@ -54,26 +54,36 @@ namespace wm {
 		bool				done = false;
 		xcb_generic_event_t*	event;
 		while(!done && (event = xcb_wait_for_event(mConn))){
+			EventHandler*		handler = NULL;
 
-			switch(event->response_type & ~0x80){
+			switch(event->response_type & 0x7F){
+
+				// Target is 'window'
 				case XCB_EXPOSE:
-					dispatchEventByWindow((xcb_expose_event_t*) event);
+					if((handler = findHandler(reinterpret_cast<xcb_expose_event_t*>(event)->window)) != NULL)
+						handler->onExposeEvent(reinterpret_cast<xcb_expose_event_t*>(event));
 					break;
 
-				case XCB_CREATE_NOTIFY:
-					dispatchEventByParent((xcb_create_notify_event_t*) event);
+				// Target is 'parent'
+				case XCB_MAP_REQUEST:
+					if((handler = findHandler(reinterpret_cast<xcb_map_request_event_t*>(event)->parent)) != NULL)
+						handler->onMapRequestEvent(reinterpret_cast<xcb_map_request_event_t*>(event));
 					break;
 
 				case XCB_CONFIGURE_REQUEST:
-					dispatchEventByParent((xcb_configure_request_event_t*) event);
+					if((handler = findHandler(reinterpret_cast<xcb_configure_request_event_t*>(event)->parent)) != NULL)
+						handler->onConfigureRequestEvent(reinterpret_cast<xcb_configure_request_event_t*>(event));
 					break;
 
-				case XCB_MAP_REQUEST:
-					dispatchEventByParent((xcb_map_request_event_t*) event);
+				case XCB_CREATE_NOTIFY:
+					if((handler = findHandler(reinterpret_cast<xcb_create_notify_event_t*>(event)->parent)) != NULL)
+						handler->onCreateNotifyEvent(reinterpret_cast<xcb_create_notify_event_t*>(event));
 					break;
 
-				case XCB_KEY_PRESS:
-					done = true;
+				// Target is 'event'
+				case XCB_BUTTON_PRESS:
+					if((handler = findHandler(reinterpret_cast<xcb_button_press_event_t*>(event)->event)) != NULL)
+						handler->onButtonPressEvent(reinterpret_cast<xcb_button_press_event_t*>(event));
 					break;
 
 				default:
@@ -85,7 +95,19 @@ namespace wm {
 
 			free(event);
 		}
+	}
 
+
+	EventHandler*
+	App::findHandler(
+		xcb_window_t		window)
+	{
+		if(mWindowMap.count(window) == 0){
+			printf("WARNING: Tried to find handler for unknown window; window = 0x%08X\n", window);
+			return NULL;
+		}
+
+		return mWindowMap[window];
 	}
 
 } // wm
@@ -153,30 +175,31 @@ namespace {
 
 		return pen;
 	}
+
+	uint32_t
+	allocateColor(
+		xcb_connection_t* 	conn,
+		xcb_colormap_t 		cmap,
+		uint16_t 			red,
+		uint16_t 			green,
+		uint16_t 			blue)
+	{
+		xcb_alloc_color_cookie_t	c = xcb_alloc_color(conn, cmap, red, green, blue);
+		xcb_generic_error_t*		error;
+		xcb_alloc_color_reply_t*	rsp = xcb_alloc_color_reply(conn, c, &error);
+		if(error){
+			printf("Failed to allocate color R:%04X G:%04X B:%04X. Error=%d\n", red, green, blue, error->error_code);
+			exit(EXIT_FAILURE);
+		}
+
+		uint32_t			pixel = rsp->pixel;
+		free(rsp);
+		return pixel;
+	}
 }
 
 using namespace manix;
 
-uint32_t
-allocateColor(
-	xcb_connection_t* 	conn,
-	xcb_colormap_t 		cmap,
-	uint16_t 			red,
-	uint16_t 			green,
-	uint16_t 			blue)
-{
-	xcb_alloc_color_cookie_t	c = xcb_alloc_color(conn, cmap, red, green, blue);
-	xcb_generic_error_t*		error;
-	xcb_alloc_color_reply_t*	rsp = xcb_alloc_color_reply(conn, c, &error);
-	if(error){
-		printf("Failed to allocate color R:%04X G:%04X B:%04X. Error=%d\n", red, green, blue, error->error_code);
-		exit(EXIT_FAILURE);
-	}
-
-	uint32_t			pixel = rsp->pixel;
-	free(rsp);
-	return pixel;
-}
 
 int32_t
 main(int32_t argc, char* argv[])

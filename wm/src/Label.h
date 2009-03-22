@@ -62,7 +62,7 @@ namespace wm {
 		uint16_t				mWidth;
 		uint16_t				mHeight;
 
-		void					onEvent(
+		void					onExposeEvent(
 									xcb_expose_event_t*	event);
 
 		void					updateText();

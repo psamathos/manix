@@ -11,10 +11,11 @@ namespace x {
 		xcb_connection_t*	connection,
 		xcb_screen_t*		screen,
 		xcb_window_t		parent,
-		uint32_t				x,
-		uint32_t				y,
-		uint32_t				width,
-		uint32_t				height)
+		uint32_t			eventMask,
+		uint32_t			x,
+		uint32_t			y,
+		uint32_t			width,
+		uint32_t			height)
 		: mConn(connection)
 	{
 		assert(mConn != NULL);
@@ -22,9 +23,7 @@ namespace x {
 		mWindow = xcb_generate_id(connection);
 
 		uint32_t	mask = XCB_CW_EVENT_MASK;
-		uint32_t	values[2];
-//		values[0] = screen->white_pixel;
-		values[0] = XCB_EVENT_MASK_EXPOSURE | XCB_EVENT_MASK_KEY_PRESS;
+		uint32_t	values[] = { eventMask };
 		xcb_create_window(
 			connection,
 			screen->root_depth,
@@ -34,7 +33,7 @@ namespace x {
 			0, // border
 			XCB_WINDOW_CLASS_INPUT_OUTPUT,
 			screen->root_visual,
-		   mask, values);
+			mask, values);
 	}
 
 	Window::Window(
@@ -50,8 +49,8 @@ namespace x {
 	Window::getGeometry(
 		uint32_t&			width,
 		uint32_t&			height,
-		int32_t&				x,
-		int32_t&				y)
+		int32_t&			x,
+		int32_t&			y)
 	{
 		xcb_get_geometry_cookie_t		cookie = xcb_get_geometry(mConn, mWindow);
 

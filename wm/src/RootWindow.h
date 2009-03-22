@@ -10,9 +10,9 @@
 
 namespace manix {
 namespace wm {
-	
+
 	class App;
-	
+
 	class RootWindow : public EventHandler {
 	public:
 							RootWindow(
@@ -20,28 +20,28 @@ namespace wm {
 								xcb_connection_t*	conn,
 								xcb_screen_t*		screen,
 								xcb_window_t		root);
-		
-		void				onEvent(
+
+		void				onExposeEvent(
 								xcb_expose_event_t*	event);
-		void				onEvent(
+		void				onConfigureRequestEvent(
 								xcb_configure_request_event_t*	event);
-		void				onEvent(
+		void				onCreateNotifyEvent(
 								xcb_create_notify_event_t*			event);
-		void				onEvent(
+		void				onMapRequestEvent(
 								xcb_map_request_event_t*			event);
-			
+
 	private:
 		App&				mApp;
 		x::Window		mWindow;
 		xcb_connection_t*	mConn;
 		xcb_screen_t*	mScreen;
-		
+
 		void				setup(
 								xcb_connection_t*	conn,
 								xcb_window_t		root);
 	};
-	
-} // wm	
+
+} // wm
 } // manix
 
 #endif // WM_ROOTWINDOW_H

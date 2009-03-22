@@ -18,9 +18,9 @@ namespace wm {
 		int32_t						y,
 		uint32_t					width,
 		uint32_t					height,
-		const std::wstring&		text)
+		const std::wstring&			text)
 		: mApp(app)
-		, mWindow(app, screen, parent, x, y, width, height)
+		, mWindow(app, screen, parent, XCB_EVENT_MASK_EXPOSURE, x, y, width, height)
 		, mText(text)
 		, mFont(font)
 		, mHAlign(align)
@@ -53,13 +53,9 @@ namespace wm {
 	}
 
 	void
-	Label::onEvent(
+	Label::onExposeEvent(
 		xcb_expose_event_t*	event)
 	{
-		xcb_rectangle_t		rect = { 0, 0, mWidth, mHeight };
-		xcb_render_color_t	color = { 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF };
-		//xcb_render_fill_rectangles(mApp, XCB_RENDER_PICT_OP_OVER, mWindowPict, color, 1, &rect);
-
 		mApp.getSystemFont().render(mText, mApp.getBlackPen(), mWindowPict, 1, mFont->getAscender() + 1);
 	}
 

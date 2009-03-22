@@ -23,9 +23,15 @@ namespace wm {
 		xcb_screen_t*			screen,
 		ClientWindow&			client)
 		: WindowFrame(app, conn, client)
-		, mFrameWindow(conn, screen, parent, 100 + client.getX() - 20, 100 + client.getY() - 20,
-				client.getWidth() + kWindowWidthDelta, client.getHeight() + kWindowHeightDelta)
+		, mFrameWindow(
+				conn, screen, parent,
+				XCB_EVENT_MASK_EXPOSURE | XCB_EVENT_MASK_BUTTON_PRESS,
+				100 + client.getX() - 20, 100 + client.getY() - 20,
+				client.getWidth() + kWindowWidthDelta,
+				client.getHeight() + kWindowHeightDelta)
 	{
+
+
 		mWindowLabel = new Label(app, screen, mFrameWindow, app.getBlackPen(),
 				&app.getSystemFont(), Label::kHAlignLeft,
 				app.getColor(kColorGray), 5, 2, 100, 18, L"");
@@ -104,19 +110,29 @@ namespace wm {
 	}
 
 	void
-	DocWindowFrame::onEvent(
-		xcb_expose_event_t*	event)
+	DocWindowFrame::onButtonPressEvent(
+		xcb_button_press_event_t*	event)
 	{
-		printf("window frame exposed\n");
+
+	}
+
+	void
+	DocWindowFrame::onButtonReleaseEvent(
+		xcb_button_release_event_t*	event)
+	{
+
+	}
+
+	void
+	DocWindowFrame::onExposeEvent(
+		xcb_expose_event_t*		event)
+	{
 		uint32_t			mask = XCB_GC_FOREGROUND;
 		uint32_t			values[] = { getApp().getColor(kColorGray) };
 		xcb_change_gc(getApp(), mGc, mask, values);
 
 		xcb_rectangle_t		rect = { 0, 0, calcWidthFromClient(), calcHeightFromClient() };
 		xcb_poly_fill_rectangle(getApp(), mFrameWindow, mGc, 1, &rect);
-
-		//xcb_clear_area(getApp(), 0, mFrameWindow, 0, 0, calcWidthFromClient(), calcHeightFromClient());
-		xcb_flush(getApp());
 	}
 
 } // wm

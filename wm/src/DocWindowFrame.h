@@ -13,7 +13,7 @@ namespace wm {
 	class DocWindowFrame : public WindowFrame, private EventHandler {
 	public:
 						DocWindowFrame(
-							App&						app,
+							App&					app,
 							xcb_connection_t*		conn,
 							xcb_window_t			parent,
 							xcb_screen_t*			screen,
@@ -22,8 +22,8 @@ namespace wm {
 		void			show();
 
 		void			moveClientTo(
-							int32_t&					x,
-							int32_t&					y);
+							int32_t&				x,
+							int32_t&				y);
 
 		void			resizeClientTo(
 							uint32_t&				width,
@@ -43,8 +43,12 @@ namespace wm {
 		void			onTitleChanged(
 							const std::wstring&		title);
 
-		void			onEvent(
-							xcb_expose_event_t*	event);
+		void			onButtonPressEvent(
+							xcb_button_press_event_t*	event);
+		void			onButtonReleaseEvent(
+							xcb_button_release_event_t*	event);
+		void			onExposeEvent(
+							xcb_expose_event_t*		event);
 	};
 
 } // wm
