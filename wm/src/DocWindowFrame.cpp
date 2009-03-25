@@ -1,3 +1,23 @@
+/*
+ * Copyright (c) 2009 Magnus Sjöstrand <magnus@manix.nu>
+ *
+ * This file is part of manix.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+
 #include <cstdio>
 #include <xcb/xcb.h>
 
@@ -30,11 +50,11 @@ namespace wm {
 				client.getWidth() + kWindowWidthDelta,
 				client.getHeight() + kWindowHeightDelta)
 	{
-
-
 		mWindowLabel = new Label(app, screen, mFrameWindow, app.getBlackPen(),
 				&app.getSystemFont(), Label::kHAlignLeft,
 				app.getColor(kColorGray), 5, 2, 100, 18, L"");
+
+		mFrameParentWindow = screen->root;
 
 		mGc = xcb_generate_id(app);
 		uint32_t			mask = XCB_GC_FOREGROUND;
@@ -91,7 +111,25 @@ namespace wm {
 	uint32_t
 	DocWindowFrame::calcHeightFromClient()
 	{
-		return getClientWindow().getWidth() + kWindowHeightDelta;
+		return getClientWindow().getHeight() + kWindowHeightDelta;
+	}
+
+	void
+	DocWindowFrame::drawDragOutline(
+		int32_t					x,
+		int32_t					y)
+	{
+		uint32_t				mask = XCB_GC_FUNCTION | XCB_GC_LINE_WIDTH | XCB_GC_SUBWINDOW_MODE;
+		uint32_t				values[] = {XCB_GX_XOR, 2, XCB_SUBWINDOW_MODE_INCLUDE_INFERIORS };
+
+		xcb_rectangle_t			rect;
+		rect.x = x;
+		rect.y = y;
+		rect.width = calcWidthFromClient();
+		rect.height = calcHeightFromClient();
+
+		xcb_change_gc(getApp(), mGc, mask, values);
+		xcb_poly_rectangle(getApp(), mFrameParentWindow, mGc, 1, &rect);
 	}
 
 	/**
@@ -113,22 +151,60 @@ namespace wm {
 	DocWindowFrame::onButtonPressEvent(
 		xcb_button_press_event_t*	event)
 	{
+		printf("Beginning drag\n");
 
+		beginDrag(mFrameWindow, event->detail,
+				event->root_x, event->root_y,
+				event->event_x, event->event_y);
+
+		int32_t			x, y;
+		getCurrentDragPos(x, y);
+		drawDragOutline(x, y);
+
+	}
+
+	void
+	DocWindowFrame::onMotionNotifyEvent(
+		xcb_motion_notify_event_t*	event)
+	{
+		if(isDragging()){
+			int32_t			x, y;
+			getCurrentDragPos(x, y);
+			drawDragOutline(x, y);
+
+			continueDrag(event->root_x, event->root_y, x, y);
+
+			drawDragOutline(x, y);
+		}
 	}
 
 	void
 	DocWindowFrame::onButtonReleaseEvent(
 		xcb_button_release_event_t*	event)
 	{
+		if(isDragging()){
+			int32_t			prevX, prevY;
+			getCurrentDragPos(prevX, prevY);
 
+			int32_t			x, y;
+			if(endDrag(event->detail, event->root_x, event->root_y, x, y)){
+				drawDragOutline(prevX, prevY);
+
+				mFrameWindow.moveTo(x, y);
+			}
+		}
 	}
 
 	void
 	DocWindowFrame::onExposeEvent(
 		xcb_expose_event_t*		event)
 	{
-		uint32_t			mask = XCB_GC_FOREGROUND;
-		uint32_t			values[] = { getApp().getColor(kColorGray) };
+		uint32_t			mask = XCB_GC_FUNCTION | XCB_GC_FOREGROUND
+									| XCB_GC_FILL_STYLE | XCB_GC_STIPPLE
+									| XCB_GC_SUBWINDOW_MODE;
+		uint32_t			values[] = { XCB_GX_COPY, getApp().getColor(kColorGray),
+									XCB_FILL_STYLE_STIPPLED, getApp().getGrayStipple(),
+									XCB_SUBWINDOW_MODE_CLIP_BY_CHILDREN };
 		xcb_change_gc(getApp(), mGc, mask, values);
 
 		xcb_rectangle_t		rect = { 0, 0, calcWidthFromClient(), calcHeightFromClient() };

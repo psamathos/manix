@@ -1,3 +1,23 @@
+/*
+ * Copyright (c) 2009 Magnus Sjöstrand <magnus@manix.nu>
+ *
+ * This file is part of manix.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+
 #include <cstdio>
 #include <cstdlib>
 #include <stdint.h>
@@ -86,6 +106,17 @@ namespace wm {
 						handler->onButtonPressEvent(reinterpret_cast<xcb_button_press_event_t*>(event));
 					break;
 
+				case XCB_BUTTON_RELEASE:
+					if((handler = findHandler(reinterpret_cast<xcb_button_release_event_t*>(event)->event)) != NULL)
+						handler->onButtonReleaseEvent(reinterpret_cast<xcb_button_release_event_t*>(event));
+					break;
+
+
+				case XCB_MOTION_NOTIFY:
+					if((handler = findHandler(reinterpret_cast<xcb_motion_notify_event_t*>(event)->event)) != NULL)
+						handler->onMotionNotifyEvent(reinterpret_cast<xcb_motion_notify_event_t*>(event));
+					break;
+
 				default:
 					printf("WARNING: Unhandled event; type = %d\n", event->response_type);
 					break;
@@ -117,14 +148,14 @@ namespace {
 
 	void
 	queryPictureFormats(
-		xcb_connection_t*				conn,
+		xcb_connection_t*			conn,
 		xcb_render_pictformat_t&	a8,
 		xcb_render_pictformat_t&	argb32,
 		xcb_render_pictformat_t&	rgb24)
 	{
 		xcb_render_query_pict_formats_cookie_t		cookie = xcb_render_query_pict_formats(conn);
 
-		xcb_generic_error_t*								error;
+		xcb_generic_error_t*						error;
 		xcb_render_query_pict_formats_reply_t*		formats = xcb_render_query_pict_formats_reply(conn, cookie, &error);
 
 		xcb_render_pictforminfo_iterator_t			i = xcb_render_query_pict_formats_formats_iterator(formats);
@@ -155,8 +186,8 @@ namespace {
 
 	xcb_render_picture_t
 	createPen(
-		xcb_connection_t*					conn,
-		xcb_window_t						penParentWindow,
+		xcb_connection_t*				conn,
+		xcb_window_t					penParentWindow,
 		xcb_render_pictformat_t			argb32format,
 		const xcb_render_color_t&		color)
 	{
